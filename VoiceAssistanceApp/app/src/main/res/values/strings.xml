@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">VoiceAssistanceApp</string>
+    <string name="primaryKey">54f67796746d40cfae566a7fd0a0fc11</string>
+
+    <!-- Main Activity Strings -->
+    <string name="startButtonLabel">START</string>
+</resources>
