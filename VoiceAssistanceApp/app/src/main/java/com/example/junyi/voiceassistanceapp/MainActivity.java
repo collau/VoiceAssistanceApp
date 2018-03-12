@@ -14,6 +14,9 @@ import com.microsoft.cognitiveservices.speechrecognition.RecognitionResult;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionMode;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServiceFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
 
     int m_waitSeconds = 0;
@@ -23,6 +26,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     SpeechRecognitionMode speechMode = SpeechRecognitionMode.ShortPhrase;
     private String locale = "en-us";
     TextView transcriptResult;
+    TextView intentResult;
     Button startButton;
 
 
@@ -37,6 +41,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
         this.transcriptResult = (TextView) findViewById(R.id.transciptResult);
         this.startButton = (Button) findViewById(R.id.startButton);
+        this.intentResult = (TextView) findViewById(R.id.intentResult);
         this.startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -92,8 +97,24 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             Log.d("phrase"+ Integer.toString(i), response.Results[i].DisplayText);
         }
         this.transcriptResult.setText(response.Results[0].DisplayText);
+        compareAndRunIntent();
 
     }
     // End of Interface Methods
 
+    ArrayList<String> A = new ArrayList<>(Arrays.asList("Top Gainers", "Top Losers", "Market Index", "Securities", "Market"));
+    ArrayList<String> B = new ArrayList<>(Arrays.asList("Watch List", "Watchlist", "Status", "Transactions", "Notifications", "Profile"));
+
+    public void compareAndRunIntent() {
+        if (A.contains(transcriptResult.getText().toString())) {
+            intentResult.setText(this.getString(R.string.intentA));
+        }
+        else if (B.contains(transcriptResult.getText().toString())){
+            intentResult.setText(this.getString(R.string.intentB));
+        }
+        else {
+            intentResult.setText(this.getString(R.string.noMatch));
+        }
+
+    }
 }
