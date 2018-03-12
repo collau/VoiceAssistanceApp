@@ -103,13 +103,14 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     // End of Interface Methods
 
     ArrayList<String> A = new ArrayList<>(Arrays.asList("Top Gainers", "Top Losers", "Market Index", "Securities", "Market"));
-    ArrayList<String> B = new ArrayList<>(Arrays.asList("Watch List", "Watchlist", "Status", "Transactions", "Notifications", "Profile"));
+    ArrayList<String> B = new ArrayList<>(Arrays.asList("Watch List", "Watchlist", "Status", "Transactions", "Notifications", "Profile", "Testing"));
 
     public void compareAndRunIntent() {
-        if (A.contains(transcriptResult.getText().toString())) {
+        String result = transcriptResult.getText().toString().replaceAll("\\p{P}","");
+        if (A.contains(result)) {
             intentResult.setText(this.getString(R.string.intentA));
         }
-        else if (B.contains(transcriptResult.getText().toString())){
+        else if (B.contains(result)){
             intentResult.setText(this.getString(R.string.intentB));
         }
         else {
