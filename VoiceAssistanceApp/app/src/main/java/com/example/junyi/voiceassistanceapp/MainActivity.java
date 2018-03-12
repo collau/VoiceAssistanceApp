@@ -51,11 +51,13 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         });
     }
 
+    // Handles click event of startButton control
     private void startButton_Click(View arg0) {
         this.m_waitSeconds = 20;
 
         this.LogRecognitionStart();
 
+        // Microphone client is created and started
         this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(this,speechMode,locale,this,this.getPrimaryKey());
         this.micClient.startMicAndRecognition();
 
@@ -63,6 +65,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     public enum FinalResponseStatus { NotReceived, OK, Timeout }
 
+    // Obtatin Primary Subscription Key for Bing Speech API
     public String getPrimaryKey() {
         return this.getString(R.string.primaryKey);
     }
@@ -93,18 +96,26 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     public void onFinalResponseReceived(final RecognitionResult response){
         Log.d("finish","final response received");
-        for (int i = 0; i < response.Results.length;i++){
-            Log.d("phrase"+ Integer.toString(i), response.Results[i].DisplayText);
+        try {
+            for (int i = 0; i < response.Results.length; i++) {
+                Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
+            }
+            this.transcriptResult.setText(response.Results[0].DisplayText);
+            compareAndRunIntent();
+        } catch (Exception e)
+        {
+            Log.e("FRR",e.toString());
+            transcriptResult.setText("Please say something");
         }
-        this.transcriptResult.setText(response.Results[0].DisplayText);
-        compareAndRunIntent();
 
     }
     // End of Interface Methods
 
+    // Defining two different ArrayLists for comparison
     ArrayList<String> A = new ArrayList<>(Arrays.asList("Top Gainers", "Top Losers", "Market Index", "Securities", "Market"));
     ArrayList<String> B = new ArrayList<>(Arrays.asList("Watch List", "Watchlist", "Status", "Transactions", "Notifications", "Profile", "Testing"));
 
+    // Method for running intent if Speech-To-Text results matches ArrayList elements
     public void compareAndRunIntent() {
         String result = transcriptResult.getText().toString().replaceAll("\\p{P}","");
         if (A.contains(result)) {
