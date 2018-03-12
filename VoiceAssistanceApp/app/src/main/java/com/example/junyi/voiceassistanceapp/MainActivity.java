@@ -91,7 +91,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         for (int i = 0; i < response.Results.length;i++){
             Log.d("phrase"+ Integer.toString(i), response.Results[i].DisplayText);
         }
-        //this.transcriptResult.setText(response.Results[0].DisplayText);
+        this.transcriptResult.setText(response.Results[0].DisplayText);
 
     }
     // End of Interface Methods
