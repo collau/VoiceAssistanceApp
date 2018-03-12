@@ -10,6 +10,7 @@ import android.widget.TextView;
 import com.microsoft.cognitiveservices.speechrecognition.DataRecognitionClient;
 import com.microsoft.cognitiveservices.speechrecognition.ISpeechRecognitionServerEvents;
 import com.microsoft.cognitiveservices.speechrecognition.MicrophoneRecognitionClient;
+import com.microsoft.cognitiveservices.speechrecognition.RecognitionResult;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionMode;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServiceFactory;
 
@@ -38,7 +39,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         this.startButton = (Button) findViewById(R.id.startButton);
         this.startButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View arg0) {
                 This.startButton_Click(arg0);
 
             }
@@ -65,15 +66,34 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         Log.d("Recstart","Start speech recognition");
     }
 
-    public void onIntentReceived(final String response){
-
-    }
-
+    // Interface methods
     public void onPartialResponseReceived(final String response) {
 
     }
 
-    public void onError(final int errorCode, final String response) {
-        Log.e("Recognition error", Integer.toString(errorCode) + " " + response);
+    public void onIntentReceived(final String payload) {
+
     }
+
+    public void onError(final int errorCode, final String response) {
+
+    }
+
+    public void onAudioEvent(boolean recording){
+        System.out.print("--Microphone status change received by onAudioEvent()--");
+        if (!recording){
+            this.micClient.endMicAndRecognition();
+        }
+    }
+
+    public void onFinalResponseReceived(final RecognitionResult response){
+        Log.d("finish","final response received");
+        for (int i = 0; i < response.Results.length;i++){
+            Log.d("phrase"+ Integer.toString(i), response.Results[i].DisplayText);
+        }
+        //this.transcriptResult.setText(response.Results[0].DisplayText);
+
+    }
+    // End of Interface Methods
+
 }

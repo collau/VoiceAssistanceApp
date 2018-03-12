@@ -4,4 +4,5 @@
 
     <!-- Main Activity Strings -->
     <string name="startButtonLabel">START</string>
+    <string name="transcriptResult">Transcript text will appear here</string>
 </resources>
