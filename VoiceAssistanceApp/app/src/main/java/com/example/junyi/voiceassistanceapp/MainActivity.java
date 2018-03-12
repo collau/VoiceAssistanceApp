@@ -80,7 +80,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     }
 
     public void onAudioEvent(boolean recording){
-        System.out.print("--Microphone status change received by onAudioEvent()--");
+        Log.d("onAudioEvent()", "--Microphone status change received by onAudioEvent()--");
         if (!recording){
             this.micClient.endMicAndRecognition();
         }
