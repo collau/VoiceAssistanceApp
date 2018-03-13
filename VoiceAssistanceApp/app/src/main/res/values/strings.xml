@@ -9,6 +9,7 @@
     <string name="startButtonLabel">START</string>
     <string name="startButtonIntentLabel">START with Intent</string>
     <string name="transcriptResult">Transcript text will appear here</string>
+    <string name="invalidResponseFeedback">Please repeat</string>
 
     <!-- Intent Strings -->
     <string name="intentA">Intent A will run</string>

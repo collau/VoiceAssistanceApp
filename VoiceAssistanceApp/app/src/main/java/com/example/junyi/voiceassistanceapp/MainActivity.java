@@ -30,7 +30,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     TextView transcriptResult;
     TextView intentResult;
     Button startButton;
-    Button startButtonIntent;
+    Button startButtonwithIntent;
 
 
     @Override
@@ -42,7 +42,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
         this.transcriptResult = (TextView) findViewById(R.id.transciptResult);
         this.startButton = (Button) findViewById(R.id.startButton);
-        this.startButtonIntent = (Button) findViewById(R.id.startButtonIntent);
+        this.startButtonwithIntent = (Button) findViewById(R.id.startButtonwithIntent);
         this.intentResult = (TextView) findViewById(R.id.intentResult);
 
         this.startButton.setOnClickListener(new View.OnClickListener() {
@@ -53,16 +53,16 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             }
         });
 
-        this.startButtonIntent.setOnClickListener(new View.OnClickListener(){
+        this.startButtonwithIntent.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View arg0) {
-                This.startButtonIntent_Click(arg0);
+                This.startButtonwithIntent_Click(arg0);
             }
         });
     }
 
-    // Handles click event of startButtonIntent control
-    private void startButtonIntent_Click(View arg0) {
+    // Handles click event of startButtonwithIntent control
+    private void startButtonwithIntent_Click(View arg0) {
 
         this.LogRecognitionStart();
 
@@ -131,6 +131,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     public void onFinalResponseReceived(final RecognitionResult response){
         Log.d("finish","final response received");
         try {
+            // TODO remove ThreadPolicy.LAX
             StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.LAX);
             for (int i = 0; i < response.Results.length; i++) {
                 Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
@@ -146,7 +147,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         } catch (Exception e)
         {
             Log.e("Invalid Response",e.toString());
-            transcriptResult.setText("Please say something");
+            transcriptResult.setText(R.string.invalidResponseFeedback);
         }
 
 
