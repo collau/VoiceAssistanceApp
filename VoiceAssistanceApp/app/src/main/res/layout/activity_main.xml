@@ -32,4 +32,13 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="90dp"
         android:id="@+id/intentResult" />
+
+    <Button
+        android:text="@string/startButtonIntentLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="21dp"
+        android:id="@+id/startButtonIntent"
+        android:layout_above="@+id/startButton"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

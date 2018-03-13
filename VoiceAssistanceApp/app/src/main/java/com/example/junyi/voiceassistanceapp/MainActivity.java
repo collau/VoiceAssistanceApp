@@ -2,34 +2,35 @@ package com.example.junyi.voiceassistanceapp;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.microsoft.cognitiveservices.speechrecognition.DataRecognitionClient;
 import com.microsoft.cognitiveservices.speechrecognition.ISpeechRecognitionServerEvents;
 import com.microsoft.cognitiveservices.speechrecognition.MicrophoneRecognitionClient;
 import com.microsoft.cognitiveservices.speechrecognition.RecognitionResult;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionMode;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServiceFactory;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
 
-    int m_waitSeconds = 0;
-    DataRecognitionClient dataClient = null;
+    final String url = "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/6b721f64-39c5-43b7-8c4c-51482ca30470?subscription-key=39ab21617ede43b3a488716683aa7476&verbose=true&timezoneOffset=480&q=";
+
     MicrophoneRecognitionClient micClient = null;
-    FinalResponseStatus isReceivedResponse = FinalResponseStatus.NotReceived;
     SpeechRecognitionMode speechMode = SpeechRecognitionMode.ShortPhrase;
     private String locale = "en-us";
     TextView transcriptResult;
     TextView intentResult;
     Button startButton;
-
-
+    Button startButtonIntent;
 
 
     @Override
@@ -41,7 +42,9 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
         this.transcriptResult = (TextView) findViewById(R.id.transciptResult);
         this.startButton = (Button) findViewById(R.id.startButton);
+        this.startButtonIntent = (Button) findViewById(R.id.startButtonIntent);
         this.intentResult = (TextView) findViewById(R.id.intentResult);
+
         this.startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -49,11 +52,32 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
             }
         });
+
+        this.startButtonIntent.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View arg0) {
+                This.startButtonIntent_Click(arg0);
+            }
+        });
+    }
+
+    // Handles click event of startButtonIntent control
+    private void startButtonIntent_Click(View arg0) {
+
+        this.LogRecognitionStart();
+
+        this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClientWithIntent(
+                this,
+                locale,this,getPrimaryKey(),
+                this.getLuisAppID(),
+                this.getLuisSubscriptionID()
+        );
+        this.micClient.startMicAndRecognition();
+
     }
 
     // Handles click event of startButton control
     private void startButton_Click(View arg0) {
-        this.m_waitSeconds = 20;
 
         this.LogRecognitionStart();
 
@@ -63,16 +87,25 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     }
 
-    public enum FinalResponseStatus { NotReceived, OK, Timeout }
 
-    // Obtatin Primary Subscription Key for Bing Speech API
+    // Obtain Primary Subscription Key for Bing Speech API
     public String getPrimaryKey() {
         return this.getString(R.string.primaryKey);
     }
 
+    // Obtain LUIS AppID
+    public String getLuisAppID() { return this.getString(R.string.LuisAppID); }
+
+    // Obtain LUIS SubscriptionID
+    public String getLuisSubscriptionID() { return this.getString(R.string.LuisSubscriptionID); }
+
+    // Obtain LUIS API
+    public String getLuisAPI() { return this.getString(R.string.LuisAPI); }
+
     private void LogRecognitionStart(){
         Log.d("Recstart","Start speech recognition");
     }
+
 
     // Interface methods
     public void onPartialResponseReceived(final String response) {
@@ -80,6 +113,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     }
 
     public void onIntentReceived(final String payload) {
+        Log.d("intent", payload);
 
     }
 
@@ -97,19 +131,29 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     public void onFinalResponseReceived(final RecognitionResult response){
         Log.d("finish","final response received");
         try {
+            StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.LAX);
             for (int i = 0; i < response.Results.length; i++) {
                 Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
             }
             this.transcriptResult.setText(response.Results[0].DisplayText);
-            compareAndRunIntent();
+
+            JSONObject result = JSONParser.getJSONFromUrl(url+response.Results[0].DisplayText.replaceAll("\\p{P}",""));
+            JSONArray values = result.getJSONArray("intents");
+            String topIntent = values.getJSONObject(0).getString("intent");
+            Log.d("result", topIntent);
+
+            //compareAndRunIntent();
         } catch (Exception e)
         {
-            Log.e("FRR",e.toString());
+            Log.e("Invalid Response",e.toString());
             transcriptResult.setText("Please say something");
         }
 
+
+
     }
     // End of Interface Methods
+
 
     // Defining two different ArrayLists for comparison
     ArrayList<String> A = new ArrayList<>(Arrays.asList("Top Gainers", "Top Losers", "Market Index", "Securities", "Market"));

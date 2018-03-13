@@ -1,9 +1,13 @@
 <resources>
     <string name="app_name">VoiceAssistanceApp</string>
     <string name="primaryKey">54f67796746d40cfae566a7fd0a0fc11</string>
+    <string name="LuisAppID">6b721f64-39c5-43b7-8c4c-51482ca30470</string>
+    <string name="LuisSubscriptionID">39ab21617ede43b3a488716683aa7476</string>
+    <string name="LuisAPI">https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/6b721f64-39c5-43b7-8c4c-51482ca30470?subscription-key=39ab21617ede43b3a488716683aa7476&amp;verbose=true&amp;timezoneOffset=480&amp;q=</string>
 
     <!-- Main Activity Strings -->
     <string name="startButtonLabel">START</string>
+    <string name="startButtonIntentLabel">START with Intent</string>
     <string name="transcriptResult">Transcript text will appear here</string>
 
     <!-- Intent Strings -->
