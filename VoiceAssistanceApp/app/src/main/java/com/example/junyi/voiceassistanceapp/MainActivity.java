@@ -1,6 +1,7 @@
 package com.example.junyi.voiceassistanceapp;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -15,6 +16,7 @@ import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionMode;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServiceFactory;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     MicrophoneRecognitionClient micClient = null;
     SpeechRecognitionMode speechMode = SpeechRecognitionMode.ShortPhrase;
     private String locale = "en-us";
+    String query;
     TextView transcriptResult;
     TextView intentResult;
     Button startButton;
@@ -131,17 +134,30 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     public void onFinalResponseReceived(final RecognitionResult response){
         Log.d("finish","final response received");
         try {
-            // TODO remove ThreadPolicy.LAX
-            StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.LAX);
             for (int i = 0; i < response.Results.length; i++) {
                 Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
             }
             this.transcriptResult.setText(response.Results[0].DisplayText);
 
-            JSONObject result = JSONParser.getJSONFromUrl(url+response.Results[0].DisplayText.replaceAll("\\p{P}",""));
-            JSONArray values = result.getJSONArray("intents");
-            String topIntent = values.getJSONObject(0).getString("intent");
-            Log.d("result", topIntent);
+            query = url+response.Results[0].DisplayText.replaceAll("\\p{P}","");
+
+            new AsyncTask<String, Void, JSONObject>(){
+                @Override
+                protected JSONObject doInBackground(String... params){
+                    return JSONParser.getJSONFromUrl(params[0]);
+                }
+
+                @Override
+                protected void onPostExecute(JSONObject result){
+                    try {
+                        JSONArray values = result.getJSONArray("intents");
+                        String topIntent = values.getJSONObject(0).getString("intent");
+                        Log.d("result", topIntent);
+                    } catch (JSONException je) {
+                        Log.e("FRR", "JSON Exception: "+ je);
+                    }
+                }
+            }.execute(query);
 
             //compareAndRunIntent();
         } catch (Exception e)
