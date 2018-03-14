@@ -3,7 +3,6 @@ package com.example.junyi.voiceassistanceapp;
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -18,9 +17,6 @@ import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServic
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
 
@@ -56,7 +52,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             }
         });
 
-        this.startButtonwithIntent.setOnClickListener(new View.OnClickListener(){
+        this.startButtonwithIntent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
                 This.startButtonwithIntent_Click(arg0);
@@ -71,7 +67,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
         this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClientWithIntent(
                 this,
-                locale,this,getPrimaryKey(),
+                locale, this, getPrimaryKey(),
                 this.getLuisAppID(),
                 this.getLuisSubscriptionID()
         );
@@ -85,7 +81,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         this.LogRecognitionStart();
 
         // Microphone client is created and started
-        this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(this,speechMode,locale,this,this.getPrimaryKey());
+        this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(this, speechMode, locale, this, this.getPrimaryKey());
         this.micClient.startMicAndRecognition();
 
     }
@@ -97,16 +93,17 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     }
 
     // Obtain LUIS AppID
-    public String getLuisAppID() { return this.getString(R.string.LuisAppID); }
+    public String getLuisAppID() {
+        return this.getString(R.string.LuisAppID);
+    }
 
     // Obtain LUIS SubscriptionID
-    public String getLuisSubscriptionID() { return this.getString(R.string.LuisSubscriptionID); }
+    public String getLuisSubscriptionID() {
+        return this.getString(R.string.LuisSubscriptionID);
+    }
 
-    // Obtain LUIS API
-    public String getLuisAPI() { return this.getString(R.string.LuisAPI); }
-
-    private void LogRecognitionStart(){
-        Log.d("Recstart","Start speech recognition");
+    private void LogRecognitionStart() {
+        Log.d("Recstart", "Start speech recognition");
     }
 
 
@@ -124,70 +121,52 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     }
 
-    public void onAudioEvent(boolean recording){
+    public void onAudioEvent(boolean recording) {
         Log.d("onAudioEvent()", "--Microphone status change received by onAudioEvent()--");
-        if (!recording){
+        if (!recording) {
             this.micClient.endMicAndRecognition();
         }
     }
 
-    public void onFinalResponseReceived(final RecognitionResult response){
-        Log.d("finish","final response received");
+    public void onFinalResponseReceived(final RecognitionResult response) {
+        Log.d("finish", "final response received");
         try {
             for (int i = 0; i < response.Results.length; i++) {
                 Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
             }
             this.transcriptResult.setText(response.Results[0].DisplayText);
 
-            query = url+response.Results[0].DisplayText.replaceAll("\\p{P}","");
+            query = url + response.Results[0].DisplayText.replaceAll("\\p{P}", "");
 
-            new AsyncTask<String, Void, JSONObject>(){
+            new AsyncTask<String, Void, JSONObject>() {
                 @Override
-                protected JSONObject doInBackground(String... params){
+                protected JSONObject doInBackground(String... params) {
                     return JSONParser.getJSONFromUrl(params[0]);
                 }
 
                 @Override
-                protected void onPostExecute(JSONObject result){
+                protected void onPostExecute(JSONObject result) {
                     try {
                         JSONArray values = result.getJSONArray("intents");
                         String topIntent = values.getJSONObject(0).getString("intent");
                         Log.d("result", topIntent);
                     } catch (JSONException je) {
-                        Log.e("FRR", "JSON Exception: "+ je);
+                        Log.e("FRR", "JSON Exception: " + je);
                     }
                 }
             }.execute(query);
 
-            //compareAndRunIntent();
-        } catch (Exception e)
-        {
-            Log.e("Invalid Response",e.toString());
+            IntentCompare intentcompare = new IntentCompare();
+            String receivedResult = intentcompare.compareAndRunIntent(this, response.Results[0].DisplayText.replaceAll("\\p{P}", ""));
+            intentResult.setText(receivedResult);
+
+
+        } catch (Exception e) {
+            Log.e("Invalid Response", e.toString());
             transcriptResult.setText(R.string.invalidResponseFeedback);
         }
 
 
-
     }
     // End of Interface Methods
-
-
-    // Defining two different ArrayLists for comparison
-    ArrayList<String> A = new ArrayList<>(Arrays.asList("Top Gainers", "Top Losers", "Market Index", "Securities", "Market"));
-    ArrayList<String> B = new ArrayList<>(Arrays.asList("Watch List", "Watchlist", "Status", "Transactions", "Notifications", "Profile", "Testing"));
-
-    // Method for running intent if Speech-To-Text results matches ArrayList elements
-    public void compareAndRunIntent() {
-        String result = transcriptResult.getText().toString().replaceAll("\\p{P}","");
-        if (A.contains(result)) {
-            intentResult.setText(this.getString(R.string.intentA));
-        }
-        else if (B.contains(result)){
-            intentResult.setText(this.getString(R.string.intentB));
-        }
-        else {
-            intentResult.setText(this.getString(R.string.noMatch));
-        }
-
-    }
 }
