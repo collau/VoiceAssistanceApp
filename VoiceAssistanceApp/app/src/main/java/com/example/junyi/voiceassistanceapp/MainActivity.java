@@ -27,6 +27,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     private String locale = "en-us";
     String query;
     String topIntent;
+    String topEntity;
     TextView transcriptResult;
     TextView intentResult;
     Button startButton;
@@ -103,7 +104,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     public String getLuisSubscriptionID() { return this.getString(R.string.LuisSubscriptionID); }
 
     private void LogRecognitionStart() {
-        Log.d("Recstart", "Start speech recognition");
+        Log.d("RecStart", "Start speech recognition");
     }
 
 
@@ -152,11 +153,15 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                             try {
                                 JSONArray values = result.getJSONArray("intents");
                                 topIntent = values.getJSONObject(0).getString("intent");
+                                JSONArray entities = result.getJSONArray("entities");
+                                topEntity = entities.getJSONObject(0).getString("entity");
                                 Log.d("result", topIntent);
                             } catch (JSONException je) {
-                                Log.e("FRR", "JSON Exception: " + je);
+                                Log.e("FRR JSON", "JSON Exception: " + je);
+                            } catch (Exception e) {
+                                Log.e("FRR", "Exception: "+e);
                             }
-                            intentResult.setText(executeIntent(topIntent));
+                            intentResult.setText(executeIntent(topIntent, topEntity));
                         }
                     }.execute(query);
                 }
@@ -174,14 +179,14 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     }
     // End of Interface Methods
 
-    public String executeIntent(String topIntent) {
+    public String executeIntent(String topIntent, String topEntity) {
 
         String intendedText;
 
         switch (topIntent) {
-            case "Action": intendedText = topIntent+" has been called";
+            case "Action": intendedText = topEntity + " " +topIntent+" has been called";
                 break;
-            case "Navigate": intendedText = topIntent+": Proceed to called section";
+            case "Navigate": intendedText = topIntent+": Proceed to " + topEntity;
                 break;
             default: intendedText = "Build in LUIS";
                 break;
