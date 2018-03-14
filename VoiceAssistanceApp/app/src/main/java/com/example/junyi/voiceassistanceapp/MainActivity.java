@@ -26,10 +26,12 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     SpeechRecognitionMode speechMode = SpeechRecognitionMode.ShortPhrase;
     private String locale = "en-us";
     String query;
+    String topIntent;
     TextView transcriptResult;
     TextView intentResult;
     Button startButton;
     Button startButtonwithIntent;
+    boolean isIntent = false;
 
 
     @Override
@@ -71,6 +73,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 this.getLuisAppID(),
                 this.getLuisSubscriptionID()
         );
+        isIntent = true;
         this.micClient.startMicAndRecognition();
 
     }
@@ -82,6 +85,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
         // Microphone client is created and started
         this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(this, speechMode, locale, this, this.getPrimaryKey());
+        isIntent = false;
         this.micClient.startMicAndRecognition();
 
     }
@@ -93,14 +97,10 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     }
 
     // Obtain LUIS AppID
-    public String getLuisAppID() {
-        return this.getString(R.string.LuisAppID);
-    }
+    public String getLuisAppID() { return this.getString(R.string.LuisAppID); }
 
     // Obtain LUIS SubscriptionID
-    public String getLuisSubscriptionID() {
-        return this.getString(R.string.LuisSubscriptionID);
-    }
+    public String getLuisSubscriptionID() { return this.getString(R.string.LuisSubscriptionID); }
 
     private void LogRecognitionStart() {
         Log.d("Recstart", "Start speech recognition");
@@ -130,43 +130,62 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     public void onFinalResponseReceived(final RecognitionResult response) {
         Log.d("finish", "final response received");
-        try {
-            for (int i = 0; i < response.Results.length; i++) {
-                Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
+
+            try {
+                for (int i = 0; i < response.Results.length; i++) {
+                    Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
+                }
+                this.transcriptResult.setText(response.Results[0].DisplayText);
+
+                if(isIntent) {
+
+                    query = url + response.Results[0].DisplayText.replaceAll("\\p{P}", "");
+
+                    new AsyncTask<String, Void, JSONObject>() {
+                        @Override
+                        protected JSONObject doInBackground(String... params) {
+                            return JSONParser.getJSONFromUrl(params[0]);
+                        }
+
+                        @Override
+                        protected void onPostExecute(JSONObject result) {
+                            try {
+                                JSONArray values = result.getJSONArray("intents");
+                                topIntent = values.getJSONObject(0).getString("intent");
+                                Log.d("result", topIntent);
+                            } catch (JSONException je) {
+                                Log.e("FRR", "JSON Exception: " + je);
+                            }
+                            intentResult.setText(executeIntent(topIntent));
+                        }
+                    }.execute(query);
+                }
+
+                else {
+                    IntentCompare intentcompare = new IntentCompare();
+                    String receivedResult = intentcompare.compareAndRunIntent(this, response.Results[0].DisplayText.replaceAll("\\p{P}", ""));
+                    intentResult.setText(receivedResult);
+                }
+
+            } catch (Exception e) {
+                Log.e("Invalid Response", e.toString());
+                transcriptResult.setText(R.string.invalidResponseFeedback);
             }
-            this.transcriptResult.setText(response.Results[0].DisplayText);
-
-            query = url + response.Results[0].DisplayText.replaceAll("\\p{P}", "");
-
-            new AsyncTask<String, Void, JSONObject>() {
-                @Override
-                protected JSONObject doInBackground(String... params) {
-                    return JSONParser.getJSONFromUrl(params[0]);
-                }
-
-                @Override
-                protected void onPostExecute(JSONObject result) {
-                    try {
-                        JSONArray values = result.getJSONArray("intents");
-                        String topIntent = values.getJSONObject(0).getString("intent");
-                        Log.d("result", topIntent);
-                    } catch (JSONException je) {
-                        Log.e("FRR", "JSON Exception: " + je);
-                    }
-                }
-            }.execute(query);
-
-            IntentCompare intentcompare = new IntentCompare();
-            String receivedResult = intentcompare.compareAndRunIntent(this, response.Results[0].DisplayText.replaceAll("\\p{P}", ""));
-            intentResult.setText(receivedResult);
-
-
-        } catch (Exception e) {
-            Log.e("Invalid Response", e.toString());
-            transcriptResult.setText(R.string.invalidResponseFeedback);
-        }
-
-
     }
     // End of Interface Methods
+
+    public String executeIntent(String topIntent) {
+
+        String intendedText;
+
+        switch (topIntent) {
+            case "Action": intendedText = topIntent+" has been called";
+                break;
+            case "Navigate": intendedText = topIntent+": Proceed to called section";
+                break;
+            default: intendedText = "Build in LUIS";
+                break;
+        }
+        return intendedText;
+    }
 }
