@@ -119,6 +119,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     }
 
     public void onError(final int errorCode, final String response) {
+        Log.e("onError()", "ErrorCode: "+Integer.toString(errorCode) + response );
 
     }
 
