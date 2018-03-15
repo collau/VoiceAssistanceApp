@@ -20,6 +20,7 @@ import org.json.JSONObject;
 
 public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
 
+    //LUIS Endpoint Key
     final String url = "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/6b721f64-39c5-43b7-8c4c-51482ca30470?subscription-key=39ab21617ede43b3a488716683aa7476&verbose=true&timezoneOffset=480&q=";
 
     MicrophoneRecognitionClient micClient = null;
@@ -137,10 +138,12 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 for (int i = 0; i < response.Results.length; i++) {
                     Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
                 }
+                // Get the highest confidence result
                 this.transcriptResult.setText(response.Results[0].DisplayText);
 
                 if(isIntent) {
 
+                    // LUIS will return a JSON from this query URL
                     query = url + response.Results[0].DisplayText.replaceAll("\\p{P}", "");
 
                     new AsyncTask<String, Void, JSONObject>() {
@@ -180,6 +183,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     }
     // End of Interface Methods
 
+    // Execute next step based on intent name which matches translated text best
     public String executeIntent(String topIntent, String topEntity) {
 
         String intendedText;
