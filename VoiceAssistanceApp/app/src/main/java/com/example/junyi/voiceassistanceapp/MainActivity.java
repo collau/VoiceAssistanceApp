@@ -20,20 +20,17 @@ import org.json.JSONObject;
 
 public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
 
-    //LUIS Endpoint Key
-    final String url = "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/6b721f64-39c5-43b7-8c4c-51482ca30470?subscription-key=39ab21617ede43b3a488716683aa7476&verbose=true&timezoneOffset=480&q=";
-
     MicrophoneRecognitionClient micClient = null;
     SpeechRecognitionMode speechMode = SpeechRecognitionMode.ShortPhrase;
-    private String locale = "en-us";
+    final private String locale = "en-us";
     String query;
     String topIntent;
     String topEntity;
     TextView transcriptResult;
     TextView intentResult;
     Button startButton;
-    Button startButtonwithIntent;
-    boolean isIntent = false;
+    Button startButtonwithLUIS;
+    boolean isLUIS = false;
 
 
     @Override
@@ -45,7 +42,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
         this.transcriptResult = (TextView) findViewById(R.id.transciptResult);
         this.startButton = (Button) findViewById(R.id.startButton);
-        this.startButtonwithIntent = (Button) findViewById(R.id.startButtonwithIntent);
+        this.startButtonwithLUIS = (Button) findViewById(R.id.startButtonwithLUIS);
         this.intentResult = (TextView) findViewById(R.id.intentResult);
 
         this.startButton.setOnClickListener(new View.OnClickListener() {
@@ -56,16 +53,16 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             }
         });
 
-        this.startButtonwithIntent.setOnClickListener(new View.OnClickListener() {
+        this.startButtonwithLUIS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                This.startButtonwithIntent_Click(arg0);
+                This.startButtonwithLUIS_Click(arg0);
             }
         });
     }
 
-    // Handles click event of startButtonwithIntent control
-    private void startButtonwithIntent_Click(View arg0) {
+    // Handles click event of startButtonwithLUIS control
+    private void startButtonwithLUIS_Click(View arg0) {
 
         this.LogRecognitionStart();
 
@@ -75,7 +72,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 this.getLuisAppID(),
                 this.getLuisSubscriptionID()
         );
-        isIntent = true;
+        isLUIS = true;
         this.micClient.startMicAndRecognition();
 
     }
@@ -87,7 +84,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
         // Microphone client is created and started
         this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(this, speechMode, locale, this, this.getPrimaryKey());
-        isIntent = false;
+        isLUIS = false;
         this.micClient.startMicAndRecognition();
 
     }
@@ -103,6 +100,9 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     // Obtain LUIS SubscriptionID
     public String getLuisSubscriptionID() { return this.getString(R.string.LuisSubscriptionID); }
+
+    // Obtain LUIS Endpoint Key
+    public String getLuisEndpointKey() { return this.getString(R.string.LuisAPI); }
 
     private void LogRecognitionStart() {
         Log.d("RecStart", "Start speech recognition");
@@ -135,16 +135,20 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         Log.d("finish", "final response received");
 
             try {
+
+                // Top few results transcribed from speech
                 for (int i = 0; i < response.Results.length; i++) {
                     Log.d("phrase" + Integer.toString(i), response.Results[i].DisplayText);
                 }
-                // Get the highest confidence result
+
+                // Display the highest confidence result transcribed from speech
                 this.transcriptResult.setText(response.Results[0].DisplayText);
 
-                if(isIntent) {
+                // If 'Start With LUIS' button is clicked
+                if(isLUIS) {
 
                     // LUIS will return a JSON from this query URL
-                    query = url + response.Results[0].DisplayText.replaceAll("\\p{P}", "");
+                    query = this.getLuisEndpointKey() + response.Results[0].DisplayText.replaceAll("\\p{P}", "");
 
                     new AsyncTask<String, Void, JSONObject>() {
                         @Override
@@ -182,6 +186,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             }
     }
     // End of Interface Methods
+
 
     // Execute next step based on intent name which matches translated text best
     public String executeIntent(String topIntent, String topEntity) {
